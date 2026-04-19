@@ -1,0 +1,18 @@
+default_stages: [pre-commit, pre-push]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-added-large-files
+  - repo: local
+    hooks:
+      - id: quality-gates
+        name: quality-gates
+        entry: make quality
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

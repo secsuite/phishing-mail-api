@@ -1,0 +1,38 @@
+.env
+.env.local
+.env.*.local
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Tooling cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Runtime artifacts
+*.log
+.DS_Store
+.idea/
+.vscode/
+
+# Local model artifacts (source of truth is GCS/model-release pipeline)
+app/ml/models/*
+!app/ml/models/.gitkeep
