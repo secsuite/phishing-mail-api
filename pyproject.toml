@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phishing-mail-api"
+version = "0.1.0"
+description = "FastAPI service for phishing email classification."
+readme = "docs/README.md"
+authors = [{ name = "SecSuite" }]
+license = { text = "MIT" }
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+dev = [
+    "black==24.10.0",
+    "ruff==0.6.8",
+    "mypy==1.11.2",
+    "pytest==8.3.3",
+    "pytest-xdist==3.6.1",
+    "pre-commit==3.8.0",
+]
+train = [
+    "torch",
+    "accelerate==1.0.1",
+    "datasets==3.0.1",
+    "evaluate==0.4.3",
+    "scikit-learn==1.5.2",
+    "pandas==2.2.3",
+    "tqdm==4.66.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/secsuite"
+Repository = "https://github.com/secsuite/phishing-mail-api"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: integration tests that may require real runtime dependencies",
+    "requires_integration_api_key: skips if INTEGRATION_API_KEY is not configured",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["app", "tests"]
+ignore_missing_imports = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_return_any = false
+no_implicit_optional = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+
+[tool.setuptools.packages.find]
+include = ["app*"]

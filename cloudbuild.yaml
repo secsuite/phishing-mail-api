@@ -1,0 +1,97 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _REGION: "europe-west1"
+  _SERVICE: ""
+  _AR_REPO: ""
+  _IMAGE_NAME: ""
+  _MODEL_ARTIFACTS_URI: ""
+  _MAX_INSTANCES: "3"
+
+steps:
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    id: "Fetch model artifacts from GCS"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+        test -n "${_SERVICE}" || (echo "ERROR: _SERVICE substitution is required" && exit 1)
+        test -n "${_AR_REPO}" || (echo "ERROR: _AR_REPO substitution is required" && exit 1)
+        test -n "${_IMAGE_NAME}" || (echo "ERROR: _IMAGE_NAME substitution is required" && exit 1)
+        test -n "${_MODEL_ARTIFACTS_URI}" || (echo "ERROR: _MODEL_ARTIFACTS_URI substitution is required" && exit 1)
+        mkdir -p app/ml/models
+        gsutil -m rsync -r "${_MODEL_ARTIFACTS_URI}" app/ml/models
+        test -f app/ml/models/secsuite_onnx_quantized/model.onnx
+        test -f app/ml/models/secsuite_onnx_quantized/tokenizer.json
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: "Warm Docker cache"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+        docker pull "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:latest" || true
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: "Build image"
+    env:
+      - "DOCKER_BUILDKIT=1"
+    args:
+      - "build"
+      - "--build-arg"
+      - "BUILDKIT_INLINE_CACHE=1"
+      - "--cache-from"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:latest"
+      - "-t"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$BUILD_ID"
+      - "-t"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:latest"
+      - "."
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: "Push image (build id)"
+    args: ["push", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$BUILD_ID"]
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: "Push image (latest)"
+    args: ["push", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:latest"]
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    id: "Deploy to Cloud Run"
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "deploy"
+      - "${_SERVICE}"
+      - "--region"
+      - "${_REGION}"
+      - "--platform"
+      - "managed"
+      - "--allow-unauthenticated"
+      - "--image"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$BUILD_ID"
+      - "--port"
+      - "8080"
+      - "--cpu"
+      - "2"
+      - "--memory"
+      - "4Gi"
+      - "--concurrency"
+      - "10"
+      - "--timeout"
+      - "300"
+      - "--min-instances"
+      - "0"
+      - "--max-instances"
+      - "${_MAX_INSTANCES}"
+      - "--set-env-vars"
+      - "APP_HOST=0.0.0.0,APP_PORT=8080,PRELOAD_MODELS_ON_STARTUP=true,MODEL_DIR=/app/app/ml/models/secsuite_onnx_quantized"
+      - "--set-secrets"
+      - "PHISHING_MAIL_API_KEY=PHISHING_MAIL_API_KEY:latest"
+
+images:
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:$BUILD_ID"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_IMAGE_NAME}:latest"
