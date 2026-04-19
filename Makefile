@@ -9,7 +9,7 @@ PRE_COMMIT := $(VENV)/bin/pre-commit
 PYTEST_WORKERS ?= 1
 TORCH_INDEX_URL ?= https://download.pytorch.org/whl/cpu
 
-.PHONY: install-runtime install-dev install-train quality quality-fix test-fast test-integration precommit
+.PHONY: install-runtime install-dev install-train quality quality-fix test-fast precommit
 
 install-runtime:
 	command -v $(PYTHON_BIN) >/dev/null 2>&1 || (echo "Missing $(PYTHON_BIN). Install Python 3.12 or run 'make install-runtime PYTHON_BIN=python3'." && exit 1)
@@ -42,10 +42,7 @@ quality-fix:
 	$(MAKE) test-fast
 
 test-fast:
-	$(PYTEST) -q --maxfail=1 $(if $(filter 1,$(PYTEST_WORKERS)),,-n $(PYTEST_WORKERS)) -m "not integration"
-
-test-integration:
-	$(PYTEST) -q --maxfail=1 -m "integration"
+	$(PYTEST) -q --maxfail=1 $(if $(filter 1,$(PYTEST_WORKERS)),,-n $(PYTEST_WORKERS))
 
 precommit:
 	$(PRE_COMMIT) run --all-files

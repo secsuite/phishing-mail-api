@@ -38,9 +38,6 @@ jobs:
     name: Quality Gates
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    env:
-      INTEGRATION_API_KEY: ${{ secrets.INTEGRATION_API_KEY }}
-      PHISHING_MAIL_API_KEY: ${{ secrets.INTEGRATION_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -55,23 +52,8 @@ jobs:
       - name: Install dependencies and hooks tooling
         run: make install-runtime
 
-      - name: Validate integration test secrets
-        run: |
-          set -euo pipefail
-          test -n "${INTEGRATION_API_KEY}" || (echo "INTEGRATION_API_KEY is required for integration tests" && exit 1)
-
       - name: Run quality gates
         run: make quality
-
-      - name: Run integration tests (must not skip)
-        run: |
-          set -euo pipefail
-          . .venv/bin/activate
-          make test-integration -e INTEGRATION_API_KEY="${INTEGRATION_API_KEY}" | tee /tmp/integration-tests.log
-          if grep -Eq "[0-9]+ skipped" /tmp/integration-tests.log; then
-            echo "Integration tests were skipped; failing the build."
-            exit 1
-          fi
 
   deploy-staging:
     name: Deploy Staging

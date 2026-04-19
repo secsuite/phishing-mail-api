@@ -35,10 +35,7 @@ Homepage = "https://github.com/secsuite"
 Repository = "https://github.com/secsuite/phishing-mail-api"
 
 [tool.pytest.ini_options]
-markers = [
-    "integration: integration tests that may require real runtime dependencies",
-    "requires_integration_api_key: skips if INTEGRATION_API_KEY is not configured",
-]
+markers = []
 
 [tool.black]
 line-length = 100

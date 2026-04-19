@@ -222,16 +222,6 @@ gh variable set GCP_WORKLOAD_IDENTITY_PROVIDER --body "projects/${PROJECT_NUMBER
 gh variable set GCP_SERVICE_ACCOUNT --body "${GHA_SA_EMAIL}"
 ```
 
-### Required GitHub secrets
-
-- `INTEGRATION_API_KEY` (used by CI integration tests)
-
-Set integration secret from local `.env`:
-
-```bash
-grep '^INTEGRATION_API_KEY=' .env | cut -d= -f2- | tr -d '\r' | gh secret set INTEGRATION_API_KEY --repo "$(git config --get remote.origin.url | sed -E 's#(git@github.com:|https://github.com/)##; s#\.git$##')" --body -
-```
-
 Recommended GitHub environments:
 
 - `staging`
@@ -279,8 +269,6 @@ gh workflow run "Deploy" -f environment=production
 
 - Runs `Quality Gates` job.
 - `make quality` is executed.
-- Integration tests are executed in CI.
-- CI fails if integration tests are skipped.
 
 ### Merge/push to `master`
 

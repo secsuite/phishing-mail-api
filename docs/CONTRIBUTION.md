@@ -18,7 +18,6 @@ make install-runtime
 Pre-push runs automatically and blocks push on failures:
 
 - `make quality` = format check + lint + mypy + fast tests.
-- Integration tests are excluded from local pre-push by default.
 
 Run commands directly when needed:
 
@@ -26,14 +25,7 @@ Run commands directly when needed:
 make quality
 make quality-fix
 make test-fast
-make test-integration
 ```
-
-## Unit vs Integration Tests
-
-- Unit/fast: `pytest -m "not integration"` (default local quality gate).
-- Integration: `pytest -m "integration"` (real model/runtime path, optional external deps).
-- Integration tests that require secrets must use explicit markers and env guards.
 
 ## PR and Merge Expectations
 
@@ -41,7 +33,7 @@ make test-integration
 2. Commit normally (lightweight pre-commit checks).
 3. Push branch (pre-push runs `make quality`).
 4. Open PR to `master`.
-5. Wait for `Quality Gates` in GitHub Actions (includes integration tests in CI).
+5. Wait for `Quality Gates` in GitHub Actions.
 6. Merge only after required checks pass.
 
 ## Branch Protection (Automated with gh)
